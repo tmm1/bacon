@@ -314,6 +314,31 @@ describe "before/after" do
   end
 end
 
+describe "setup/teardown" do
+  done = [1]
+  setup do
+    done << 2
+  end
+  teardown do
+    done << 3
+  end
+
+  it "should not run teardown before requirements" do
+    done << 4
+    done.should == [1,2,4]
+  end
+
+  describe "nested context" do
+    teardown do
+      done << 5
+    end
+  end
+
+  it "should run teardown after requirements" do
+    done.should == [1,2,4,5]
+  end
+end
+
 shared "a shared context" do
   it "gets called where it is included" do
     true.should.be.true

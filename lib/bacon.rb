@@ -130,7 +130,7 @@ module Bacon
     
     def initialize(name, &block)
       @name = name
-      @before, @after = [], []
+      @before, @after, @teardown = [], [], []
       @block = block
     end
     
@@ -138,10 +138,15 @@ module Bacon
       return  unless name =~ RestrictContext
       Bacon.handle_specification(name) { instance_eval(&block) }
       self
+    ensure
+      @teardown.each { |block| instance_eval(&block) }
     end
 
     def before(&block); @before << block; end
     def after(&block);  @after << block; end
+
+    def setup(&block); instance_eval(&block); end
+    def teardown(&block); @teardown << block; end
 
     def behaves_like(*names)
       names.each { |name| instance_eval(&Shared[name]) }
