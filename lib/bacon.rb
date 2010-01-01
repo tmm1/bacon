@@ -37,13 +37,13 @@ module Bacon
 
   module SpecDoxOutput
     def handle_specification(name)
-      puts name
+      puts spaces + name
       yield
-      puts
+      puts if Counter[:context_depth] == 1
     end
 
     def handle_requirement(description)
-      print "- #{description}"
+      print "#{spaces}  - #{description}"
       error = yield
       puts error.empty? ? "" : " [#{error}]"
     end
@@ -52,6 +52,12 @@ module Bacon
       print ErrorLog  if Backtraces
       puts "%d specifications (%d requirements), %d failures, %d errors" %
         Counter.values_at(:specifications, :requirements, :failed, :errors)
+    end
+
+    private
+
+    def spaces
+      "  " * (Counter[:context_depth] - 1)
     end
   end
 
@@ -136,7 +142,9 @@ module Bacon
     
     def run
       return  unless name =~ RestrictContext
+      Counter[:context_depth] += 1
       Bacon.handle_specification(name) { instance_eval(&block) }
+      Counter[:context_depth] -= 1
       self
     ensure
       @teardown.each { |block| instance_eval(&block) }
